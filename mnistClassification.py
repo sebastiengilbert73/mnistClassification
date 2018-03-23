@@ -82,13 +82,14 @@ for validationExampleNdx in range(numberOfValidationImages):
     validationLabelTensor[validationExampleNdx] = classIndex
 
 # Create a neural network
-numberOfConvolutionKernelsList = []
-maxPoolingKernelList = []
+numberOfConvolutions_kernelSize_pooling_List = []
 for layerNdx in range(3): #args.numberOfConvolutionLayers):
-    numberOfConvolutionKernelsList.append(32)#args.numberOfKernelsPerLayer)
-    maxPoolingKernelList.append(2)
+    numberOfConvolutions_kernelSize_pooling_List.append( (32, 7, 2) )
+    #numberOfConvolutionKernelsList.append(32)#args.numberOfKernelsPerLayer)
+    #maxPoolingKernelList.append(2)
 
-neuralNet = ConvStackClassifier.NeuralNet(numberOfConvolutionKernelsList, maxPoolingKernelList,
+#neuralNet = ConvStackClassifier.NeuralNet(numberOfConvolutionKernelsList, maxPoolingKernelList,
+neuralNet = ConvStackClassifier.NeuralNet(numberOfConvolutions_kernelSize_pooling_List,
                                           1, 10, imgSize[0],
                                           args.dropoutRatio)
 if args.cuda:

@@ -3,6 +3,7 @@ import torch
 import argparse
 import ConvStackClassifier
 import numpy
+import os
 
 print ("mnistClassification.py")
 
@@ -14,6 +15,7 @@ parser.add_argument('--disable-cuda', action='store_true', help='Disable CUDA')
 parser.add_argument('--learningRate', help='The learning rate', type=float, default=0.001)
 parser.add_argument('--momentum', help='The learning momentum', type=float, default=0.9)
 parser.add_argument('--dropoutRatio', help='The dropout ratio', type=float, default=0.5)
+parser.add_argument('--saveDirectory', help='The directory where the files will be saved', default='/tmp')
 
 args = parser.parse_args()
 args.cuda = not args.disable_cuda and torch.cuda.is_available()
@@ -92,6 +94,7 @@ for layerNdx in range(3): #args.numberOfConvolutionLayers):
 neuralNet = ConvStackClassifier.NeuralNet(numberOfConvolutions_kernelSize_pooling_List,
                                           1, 10, imgSize[0],
                                           args.dropoutRatio)
+print("neuralNet.structure = {}".format(neuralNet.structure))
 if args.cuda:
     neuralNet.cuda() # Move to GPU
     validationImageTensor = validationImageTensor.cuda()
@@ -102,6 +105,9 @@ lossFunction = torch.nn.NLLLoss()
 
 minibatchSize = 64
 minibatchIndicesListList = MinibatchIndices(args.maximumNumberOfTrainingImages, minibatchSize)
+trainingDataFilepath = os.path.join(args.saveDirectory, 'trainingEpochs.csv')
+trainingDataFile = open(trainingDataFilepath, "w")
+trainingDataFile.write('epoch,averageTrainLoss,validationLoss\n')
 
 for epoch in range(200):
     averageTrainLoss = 0
@@ -146,3 +152,7 @@ for epoch in range(200):
         validationLabelTensor) )
 
     print("Epoch {}: Average train loss = {}; validationLoss = {}".format(epoch, averageTrainLoss, validationLoss.data[0]))
+    neuralNet.Save(args.saveDirectory, str(validationLoss.data[0]))
+    trainingDataFile.write("{},{},{}\n".format(epoch, averageTrainLoss, validationLoss.data[0]) )
+
+trainingDataFile.close()

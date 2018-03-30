@@ -4,6 +4,7 @@ import argparse
 import ConvStackClassifier
 import numpy
 import os
+import sys
 
 print ("mnistClassification.py")
 
@@ -36,6 +37,14 @@ def MinibatchIndices(numberOfSamples, minibatchSize):
         minibatchesIndicesList.append(lastMinibatchIndices)
     return minibatchesIndicesList
 
+def MostProbableClass(outputVector):
+    mostProbableClass = -1;
+    highestOutput = -float('inf')
+    for classNdx in range (outputVector.shape[0]):
+        if outputVector[classNdx] > highestOutput:
+            highestOutput = outputVector[classNdx]
+            mostProbableClass = classNdx
+    return mostProbableClass
 # ----------------------------------------------------------------
 
 
@@ -151,7 +160,15 @@ for epoch in range(200):
     validationLoss = lossFunction(torch.nn.functional.log_softmax(validationOutput), torch.autograd.Variable(
         validationLabelTensor) )
 
-    print("Epoch {}: Average train loss = {}; validationLoss = {}".format(epoch, averageTrainLoss, validationLoss.data[0]))
+    # Accuracy
+    numberOfCorrectPredictions = 0
+    for validationNdx in range(numberOfValidationImages):
+        mostProbableClass = MostProbableClass(validationOutput[validationNdx].data)
+        if mostProbableClass == validationLabelTensor[validationNdx]:
+            numberOfCorrectPredictions += 1
+    accuracy = numberOfCorrectPredictions/numberOfValidationImages
+
+    print("Epoch {}: Average train loss = {}; validationLoss = {}; accuracy = {}".format(epoch, averageTrainLoss, validationLoss.data[0], accuracy))
     neuralNet.Save(args.saveDirectory, str(validationLoss.data[0]))
     trainingDataFile.write("{},{},{}\n".format(epoch, averageTrainLoss, validationLoss.data[0]) )
 

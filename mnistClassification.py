@@ -17,6 +17,7 @@ parser.add_argument('--learningRate', help='The learning rate', type=float, defa
 parser.add_argument('--momentum', help='The learning momentum', type=float, default=0.9)
 parser.add_argument('--dropoutRatio', help='The dropout ratio', type=float, default=0.5)
 parser.add_argument('--saveDirectory', help='The directory where the files will be saved', default='/tmp')
+parser.add_argument('--structure', help='The neural network structure. Ex.: ConvStack_1_2_32_7_2_32_7_2_10_28_0.5')
 
 args = parser.parse_args()
 args.cuda = not args.disable_cuda and torch.cuda.is_available()
@@ -93,16 +94,20 @@ for validationExampleNdx in range(numberOfValidationImages):
     validationLabelTensor[validationExampleNdx] = classIndex
 
 # Create a neural network
-numberOfConvolutions_kernelSize_pooling_List = []
-for layerNdx in range(3): #args.numberOfConvolutionLayers):
-    numberOfConvolutions_kernelSize_pooling_List.append( (32, 7, 2) )
-    #numberOfConvolutionKernelsList.append(32)#args.numberOfKernelsPerLayer)
-    #maxPoolingKernelList.append(2)
+if args.structure is not None:
+    neuralNet = ConvStackClassifier.NeuralNet(structure=args.structure)
 
-#neuralNet = ConvStackClassifier.NeuralNet(numberOfConvolutionKernelsList, maxPoolingKernelList,
-neuralNet = ConvStackClassifier.NeuralNet(numberOfConvolutions_kernelSize_pooling_List,
-                                          1, 10, imgSize[0],
-                                          args.dropoutRatio)
+else:
+    numberOfConvolutions_kernelSize_pooling_List = []
+    for layerNdx in range(3): #args.numberOfConvolutionLayers):
+        numberOfConvolutions_kernelSize_pooling_List.append( (32, 7, 2) )
+        #numberOfConvolutionKernelsList.append(32)#args.numberOfKernelsPerLayer)
+        #maxPoolingKernelList.append(2)
+
+    #neuralNet = ConvStackClassifier.NeuralNet(numberOfConvolutionKernelsList, maxPoolingKernelList,
+    neuralNet = ConvStackClassifier.NeuralNet(numberOfConvolutions_kernelSize_pooling_List,
+                                              1, 10, imgSize[0],
+                                              args.dropoutRatio)
 print("neuralNet.structure = {}".format(neuralNet.structure))
 if args.cuda:
     neuralNet.cuda() # Move to GPU

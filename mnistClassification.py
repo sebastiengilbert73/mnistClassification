@@ -118,7 +118,25 @@ trainingDataFilepath = os.path.join(args.saveDirectory, 'trainingEpochs.csv')
 trainingDataFile = open(trainingDataFilepath, "w")
 trainingDataFile.write('epoch,averageTrainLoss,validationLoss\n')
 
-for epoch in range(200):
+# Initial evaluation
+# Validation loss
+validationOutput = neuralNet( torch.autograd.Variable(validationImageTensor) )
+validationLoss = lossFunction(torch.nn.functional.log_softmax(validationOutput), torch.autograd.Variable(
+    validationLabelTensor) )
+
+# Accuracy
+numberOfCorrectPredictions = 0
+for validationNdx in range(numberOfValidationImages):
+    mostProbableClass = MostProbableClass(validationOutput[validationNdx].data)
+    if mostProbableClass == validationLabelTensor[validationNdx]:
+        numberOfCorrectPredictions += 1
+accuracy = numberOfCorrectPredictions/numberOfValidationImages
+
+print("Epoch 0: Average train loss = ?; validationLoss = {}; accuracy = {}".format(validationLoss.data[0], accuracy))
+neuralNet.Save(args.saveDirectory, str(validationLoss.data[0]))
+trainingDataFile.write("0,?,{}\n".format(validationLoss.data[0]) )
+
+for epoch in range(1, 200):
     averageTrainLoss = 0
     for minibatchListNdx in range(len(minibatchIndicesListList)):
         minibatchIndicesList = minibatchIndicesListList[minibatchListNdx]
